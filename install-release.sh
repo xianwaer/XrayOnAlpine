@@ -166,6 +166,77 @@ client_re(){
 
 installHy2(){
     echo "install hystria2 and config it"
+    # Hysteria 2 installation script for Alpine Linux 3.19
+
+set -e
+
+# Check for root privileges
+if [ "$(id -u)" -ne 0 ]; then
+    echo "This script must be run as root"
+    exit 1
+fi
+
+# Update and install necessary packages
+apk update && apk upgrade
+apk add bash gawk curl openssl
+
+# Generate a random password
+hyPasswd=$(openssl rand -hex 16)
+
+# Get server IP
+getIP() {
+    curl -s https://api.ipify.org
+}
+
+serverIP=$(getIP)
+
+# Install Hysteria 2
+bash <(curl -fsSL https://get.hy2.sh/)
+
+# Create Hysteria config directory
+mkdir -p /etc/hysteria
+
+# Generate Hysteria 2 server config
+cat <<EOF > /etc/hysteria/config.yaml
+listen: :443
+protocol: udp
+auth:
+  type: password
+  password: "$hyPasswd"
+masquerade:
+  type: proxy
+  proxy:
+    url: https://www.bing.com
+    rewriteHost: true
+EOF
+
+# Create OpenRC service script
+cat << 'EOF' > /etc/init.d/hysteria
+#!/sbin/openrc-run
+
+name="hysteria"
+description="Hysteria 2 VPN server"
+
+command="/usr/local/bin/hysteria"
+command_args="server --config /etc/hysteria/config.yaml"
+pidfile="/var/run/${name}.pid"
+command_background="yes"
+
+depend() {
+    need net
+}
+EOF
+
+# Set permissions and enable service
+chmod +x /etc/init.d/hysteria
+rc-update add hysteria default
+service hysteria start
+
+# Output connection details
+echo "Hysteria 2 has been installed successfully!"
+echo "Server IP: $serverIP"
+echo "Password: $hyPasswd"
+echo "Configuration file: /etc/hysteria/config.yaml"
 }
 
 menu(){
