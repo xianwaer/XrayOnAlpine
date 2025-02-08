@@ -83,6 +83,102 @@ cat >/usr/local/etc/xray/config.json<<EOF
 EOF
 service xray restart
 }
+
+
+configRealityRegion(){
+destNames=("www.t-mobile.com" "www.arm.com" "www.tsukuba.ac.jp" "www.hongkongdisneyland.com" "www.china-airlines.com" "sigtelinc.com" "www.bouyguestelecom.fr" "www.mercedes-benz.de" "www.incredibleindia.gov.in")
+sniNames=("business.t-mobile.com" "learn.arm.com" "www.tsukuba.ac.jp" "entitlement.hongkongdisneyland.com" "book.china-airlines.com" "www.sigtelinc.com" "www.bouygtel.fr" "pro.mercedes-benz.com" "www.incredibleindia.org")
+echo "Please select a region:"
+echo "1. US"
+echo "2. UK"
+echo "3. JP"
+echo "4. HK"
+echo "5. TW"
+echo "6. SG"
+echo "7. FR"
+echo "8. DE"
+echo "9. IN"
+echo "10. Others"
+
+# Read user input
+read -r userInput
+
+if [ "$userInput" -ge 1 ] && [ "$userInput" -le 10 ]; then
+    index=$((userInput - 1))  # Adjust index to match array (0-based)
+    serverName=${destNames[$index]}
+    sniName=${sniNames[$index]}
+else
+    echo "Invalid selection. Please enter a number between 1 and 10."
+    configRealityRegion
+fi
+
+
+    v2uuid=$(/usr/local/bin/xray/xray uuid)
+        reX25519Key=$(/usr/local/bin/xray/xray x25519)
+    rePrivateKey=$(echo "${reX25519Key}" | head -1 | awk '{print $3}')
+    rePublicKey=$(echo "${reX25519Key}" | tail -n 1 | awk '{print $3}')
+    read -t 15 -p "please input port or use drfault 443 port(1-65535)："  getPort
+if [ -z $getPort ];then
+    getPort=443
+fi
+shortId1=$(getShortId)
+shortId2=$(getShortId)
+
+
+    # Step 4: Create the Xray configuration file
+cat >/usr/local/etc/xray/config.json<<EOF
+{
+    "inbounds": [
+        {
+            "port": $getPort,
+            "protocol": "vless",
+            "settings": {
+                "clients": [
+                    {
+                        "id": "$v2uuid",
+                        "flow": "xtls-rprx-vision"
+                    }
+                ],
+                "decryption": "none"
+            },
+            "streamSettings": {
+                "network": "tcp",
+                "security": "reality",
+                "realitySettings": {
+                    "show": false,
+                    "dest": "$serverName:443",
+                    "xver": 0,
+                    "serverNames": [
+                        "$sniName"
+                    ],
+                    "privateKey": "$rePrivateKey",
+                    "minClientVer": "",
+                    "maxClientVer": "",
+                    "maxTimeDiff": 0,
+                    "shortIds": [
+                        "$shortId1",
+                        "$shortId2"
+                    ]
+                }
+            }
+        }
+    ],
+    "outbounds": [
+        {
+            "protocol": "freedom",
+            "tag": "direct"
+        },
+        {
+            "protocol": "blackhole",
+            "tag": "blocked"
+        }
+    ]    
+}
+EOF
+service xray restart
+}
+
+
 installXray(){
     apk update && apk upgrade
 
@@ -139,7 +235,25 @@ rm -f /tmp/xray.zip
 service xray status
 
 echo "Xray installation complete!"
-configReality
+
+   echo "Please select a configuration method:"
+    echo "1) Auto Config"
+    echo "2) Manual Config"
+    echo "3) Exit"
+
+    while true; do
+        read -r -p "Enter your choice (1-3): " choice
+        case "$choice" in
+            1) configReality; break ;;
+            2) configRealityRegion; break ;;
+            3) echo "Exiting..."; exit 0 ;;
+            *) echo "Invalid input. Please enter 1, 2, or 3." ;;
+        esac
+    done
+
+
+
+
 clear
 client_re
 }
@@ -156,10 +270,10 @@ client_re(){
     echo "传输协议：tcp"
     echo "Public key：${rePublicKey}"
     echo "底层传输：reality"
-    echo "SNI: corporate.amazon.com"
+    echo "SNI: $sniName"
     echo "shortIds: ${getPort}"
     echo "===================================="
-    echo "vless://${v2uuid}@$(getIP):${getPort}?encryption=none&flow=xtls-rprx-vision&security=reality&sni=corporate.amazon.com&fp=chrome&pbk=${rePublicKey}&sid=${shortId1}&type=tcp&headerType=none#xrayReality"
+    echo "vless://${v2uuid}@$(getIP):${getPort}?encryption=none&flow=xtls-rprx-vision&security=reality&sni=$sniName&fp=chrome&pbk=${rePublicKey}&sid=${shortId1}&type=tcp&headerType=none#xrayReality"
     echo
 }
 
