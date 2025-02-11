@@ -1,3 +1,5 @@
+[English](README_EN.md) | 中文
+
 # Xray 安装脚本（适用于 Alpine Linux）
 
 本仓库提供了一键安装和配置 Xray-core 的 shell 脚本，专为 Alpine Linux 系统设计。该脚本自动完成下载最新的 Xray 版本，设置为 OpenRC 服务，并配置一个基础的 SOCKS 代理。
