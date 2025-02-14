@@ -37,7 +37,7 @@ getIP() {
 
 # Install required packages
 log "Installing required packages..."
-apk add --no-cache bash curl wget openssl coreutils
+apk add --no-cache bash curl wget openssl coreutils grep
 
 # Generate a strong random password (32 characters)
 hyPasswd=$(openssl rand -base64 24)
