@@ -78,8 +78,8 @@ installXray(){
 apk add curl bash unzip grep
 
 # Step 3: Download and install Xray
-XRAY_VERSION=$(curl -s https://api.github.com/repos/XTLS/Xray-core/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
-curl -L -o /tmp/xray.zip https://github.com/XTLS/Xray-core/releases/download/${XRAY_VERSION}/Xray-linux-64.zip
+XRAY_VERSION=$(curl -s https://proxy.6665555.xyz/https://api.github.com/repos/XTLS/Xray-core/releases/latest | grep -Po '"tag_name": "\K.*?(?=")')
+curl -L -o /tmp/xray.zip https://proxy.6665555.xyz/https://github.com/XTLS/Xray-core/releases/download/${XRAY_VERSION}/Xray-linux-64.zip
 
 # Create directories
 mkdir -p /usr/local/bin/xray
